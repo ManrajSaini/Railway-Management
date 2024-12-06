@@ -63,7 +63,7 @@ create policy "Public read access to stations"
 create policy "Admin can insert stations"
   on stations for insert
   to authenticated
-  using (exists (
+  with check (exists (
     select 1 from users
     where users.id = auth.uid()
     and users.role = 'admin'
@@ -78,7 +78,7 @@ create policy "Public read access to trains"
 create policy "Admin can insert/update trains"
   on trains for all
   to authenticated
-  using (exists (
+  with check (exists (
     select 1 from users
     where users.id = auth.uid()
     and users.role = 'admin'
@@ -93,7 +93,7 @@ create policy "Public read access to train_seats"
 create policy "Admin can manage train_seats"
   on train_seats for all
   to authenticated
-  using (exists (
+  with check (exists (
     select 1 from users
     where users.id = auth.uid()
     and users.role = 'admin'
