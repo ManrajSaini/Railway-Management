@@ -12,6 +12,12 @@ create table if not exists users (
 -- Create RLS policies
 alter table users enable row level security;
 
+-- Allow public registration
+create policy "Allow public registration" on users
+  for insert
+  to public
+  with check (true);
+
 -- Policy for users to read their own data
 create policy "Users can view own data" on users
   for select using (auth.uid() = id);

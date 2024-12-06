@@ -1,14 +1,13 @@
-require('dotenv').config();
-
+import 'dotenv/config';
 import express, { json } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
-import authRoutes from './src/routes/auth.routes';
-import trainRoutes from './src/routes/train.routes';
-import bookingRoutes from './src/routes/booking.routes';
+import authRoutes from './src/routes/auth.routes.js';
+import trainRoutes from './src/routes/train.routes.js';
+import bookingRoutes from './src/routes/booking.routes.js';
 
 const app = express();
 

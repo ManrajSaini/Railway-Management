@@ -6,12 +6,25 @@ export const register = async (req, res) => {
   try {
     const { email, password, name, role = 'user' } = req.body;
 
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (role !== 'user' && role !== 'admin') {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
     // Check if user already exists
-    const { data: existingUser } = await supabase
+    const { data: existingUser, error: checkError } = await supabase
       .from('users')
       .select('email')
       .eq('email', email)
       .single();
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Error checking existing user:', checkError);
+      throw checkError;
+    }
 
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
@@ -22,7 +35,7 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user in Supabase
-    const { data: newUser, error } = await supabase
+    const { data: newUser, error: createError } = await supabase
       .from('users')
       .insert([
         {
@@ -35,7 +48,10 @@ export const register = async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (createError) {
+      console.error('Error creating user:', createError);
+      throw createError;
+    }
 
     // Generate JWT token
     const token = jwt.sign(
@@ -55,13 +71,20 @@ export const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Error registering user' });
+    res.status(500).json({ 
+      error: 'Error registering user',
+      details: error.message
+    });
   }
 };
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Missing email or password' });
+    }
 
     // Get user from Supabase
     const { data: user, error } = await supabase
@@ -70,7 +93,12 @@ export const login = async (req, res) => {
       .eq('email', email)
       .single();
 
-    if (error || !user) {
+    if (error) {
+      console.error('Error fetching user:', error);
+      throw error;
+    }
+
+    if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -98,6 +126,9 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Error logging in' });
+    res.status(500).json({ 
+      error: 'Error logging in',
+      details: error.message
+    });
   }
 };
